@@ -21,6 +21,15 @@ class RoomsController {
       next(err);
     }
   };
+
+  createRoom = async (req, res, next) => {
+    try {
+      const newRoom = await this.roomsService.create(req.body);
+      res.status(201).json(newRoom);
+    } catch (error) {
+      next(error);
+    }
+  };
 }
 
 module.exports = RoomsController;

@@ -16,6 +16,10 @@ class RoomsService {
     }
     return room;
   }
+
+  async create(roomData) {
+    return await this.roomsRepository.create(roomData);
+  }
 }
 
 module.exports = RoomsService;

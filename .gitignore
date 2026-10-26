@@ -1,0 +1,30 @@
+# Zależności
+node_modules/
+
+# Pliki środowiskowe i wrażliwe dane
+.env
+
+# Logi npm / yarn / pnpm
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+logs/
+*.log
+
+# Pliki systemowe operacyjnego systemu
+.DS_Store
+Thumbs.db
+
+# Katalogi wyjściowe / kompilacji (jeśli występują)
+dist/
+build/
+
+# Konfiguracja środowisk programistycznych / edytorów
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp

@@ -1,9 +1,9 @@
 const { Router } = require('express');
-const ReservationsRepositoryMemory = require('./reservations.repository.memory');
-const RoomsRepositoryMemory = require('../rooms/rooms.repository.memory');
+const reservationsRepository = require('./reservations.repository.knex');
+const roomsRepository = require('../rooms/rooms.repository.knex');
 const ReservationsService = require('./reservations.service');
 const ReservationsController = require('./reservations.controller');
-const validate = require('../../middleware/validate'); // Uniwersalny middleware z Zadania 2
+const validate = require('../../middleware/validate');
 const { 
   createReservationSchema, 
   getReservationsSchema, 
@@ -12,9 +12,7 @@ const {
 
 const router = Router();
 
-// Inicjalizacja zależności (Dependency Injection)
-const reservationsRepository = new ReservationsRepositoryMemory();
-const roomsRepository = new RoomsRepositoryMemory(); // Potrzebne do weryfikacji sal i pojemności
+// Inicjalizacja zależności z repozytoriami Knex
 const reservationsService = new ReservationsService(reservationsRepository, roomsRepository);
 const reservationsController = new ReservationsController(reservationsService);
 

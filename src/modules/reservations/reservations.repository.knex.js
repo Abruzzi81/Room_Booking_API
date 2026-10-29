@@ -1,5 +1,7 @@
 const db = require('../../db');
 const ValidationError = require('../../errors/validation.error');
+const ConflictError = require('../../errors/conflict.error');
+const NotFoundError = require('../../errors/not-found.error');
 
 function mapReservation(row) {
     if (!row) return null;
@@ -246,6 +248,70 @@ class ReservationsRepositoryKnex {
             }
         };
     }
+
+
+    async createWithRoomLock(reservationData) {
+        try {
+            return await db.transaction(async (trx) => {
+                const roomId =
+                    reservationData.roomId ?? reservationData.room_id;
+
+                // Blokujemy salę. Inne transakcje rezerwujące tę samą
+                // salę muszą poczekać na zakończenie tej transakcji.
+                const room = await trx('rooms')
+                    .where({ id: roomId })
+                    .forUpdate()
+                    .first();
+
+                if (!room) {
+                    throw new NotFoundError('Room not found');
+                }
+
+                const startTime =
+                    reservationData.startTime ?? reservationData.start_time;
+                const endTime =
+                    reservationData.endTime ?? reservationData.end_time;
+
+                // Sprawdzenie kolizji wewnątrz tej samej transakcji.
+                const conflict = await trx('reservations')
+                    .where('room_id', roomId)
+                    .where('status', 'CONFIRMED')
+                    .andWhere('start_time', '<', endTime)
+                    .andWhere('end_time', '>', startTime)
+                    .first();
+
+                if (conflict) {
+                    throw new ConflictError(
+                        'Room is already booked for this time period',
+                        'ROOM_ALREADY_BOOKED'
+                    );
+                }
+
+                const [row] = await trx('reservations')
+                    .insert({
+                        room_id: roomId,
+                        title: reservationData.title,
+                        start_time: startTime,
+                        end_time: endTime,
+                        status: 'CONFIRMED'
+                    })
+                    .returning('*');
+
+                return mapReservation(row);
+            });
+        } catch (error) {
+            // PostgreSQL: exclusion constraint violation.
+            if (error.code === '23P01') {
+                throw new ConflictError(
+                    'Room is already booked for this time period',
+                    'ROOM_ALREADY_BOOKED'
+                );
+            }
+
+            throw error;
+        }
+    }
+
 }
 
 module.exports = new ReservationsRepositoryKnex();

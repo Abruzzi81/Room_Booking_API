@@ -25,27 +25,32 @@ class ReservationsService {
   }
 
 
+
   async createReservation(data) {
     const { roomId, title, startTime, endTime } = data;
-
-    const room = await this.roomsRepository.findById(roomId);
-    if (!room) {
-      throw new NotFoundError('Room not found');
-    }
 
     const startMs = new Date(startTime).getTime();
     const endMs = new Date(endTime).getTime();
     const currentTime = this.now().getTime();
 
     if (startMs < currentTime) {
-      throw new AppError('Start time cannot be in the past', 400, 'INVALID_START_TIME');
+      throw new AppError(
+        'Start time cannot be in the past',
+        400,
+        'INVALID_START_TIME'
+      );
     }
 
     if (endMs <= startMs) {
-      throw new AppError('End time must be later than start time', 400, 'INVALID_TIME_RANGE');
+      throw new AppError(
+        'End time must be later than start time',
+        400,
+        'INVALID_TIME_RANGE'
+      );
     }
 
     const durationMinutes = (endMs - startMs) / (1000 * 60);
+
     if (durationMinutes < 15 || durationMinutes > 8 * 60) {
       throw new AppError(
         'Reservation duration must be between 15 minutes and 8 hours',
@@ -54,26 +59,14 @@ class ReservationsService {
       );
     }
 
-    if (typeof this.reservationsRepository.findConflicting === 'function') {
-      const conflict = await this.reservationsRepository.findConflicting(roomId, startTime, endTime);
-      if (conflict) {
-        throw new ConflictError('Room is already booked for this time period', 'ROOM_ALREADY_BOOKED');
-      }
-    } else {
-      const existingReservations = await this.reservationsRepository.findByRoomId(roomId);
-      const conflict = existingReservations.some(existing => {
-        if (existing.status === 'CANCELLED') return false;
-        const existingStart = new Date(existing.startTime).getTime();
-        const existingEnd = new Date(existing.endTime).getTime();
-        return startMs < existingEnd && existingStart < endMs;
-      });
-      if (conflict) {
-        throw new ConflictError('Room is already booked for this time period', 'ROOM_ALREADY_BOOKED');
-      }
-    }
-
-    return this.reservationsRepository.create({ roomId, title, startTime, endTime });
+    return this.reservationsRepository.createWithRoomLock({
+      roomId,
+      title,
+      startTime,
+      endTime
+    });
   }
+
 
   async cancelReservation(id) {
     const reservation = await this.reservationsRepository.findById(id);

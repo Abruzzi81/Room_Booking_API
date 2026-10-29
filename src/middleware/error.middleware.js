@@ -48,6 +48,30 @@ function errorMiddleware(err, req, res, next) {
     return res.status(err.statusCode).json(responsePayload);
   }
 
+  // Obsługa błędów bazy danych PostgreSQL (np. Unique Violation 23505)
+  if (err.code === '23505') {
+    let message = 'Resource already exists';
+    let code = 'CONFLICT';
+
+    // Rozróżnienie constraintów bez wyciekania wewnętrznej struktury bazy do klienta
+    if (err.constraint && err.constraint.includes('rooms')) {
+      message = 'A room with this name already exists in this building';
+      code = 'ROOM_ALREADY_EXISTS';
+    } else if (err.constraint && err.constraint.includes('buildings')) {
+      message = 'A building with this name already exists';
+      code = 'BUILDING_ALREADY_EXISTS';
+    }
+
+    return res.status(409).json({
+      error: {
+        code,
+        message,
+        requestId
+      }
+    });
+  }
+
+
   // Nieoczekiwany błąd serwera (500) - stack trace trafia tylko do logów serwera
   console.error(`[CRITICAL ERROR] ${requestId}:`, err);
 

@@ -32,6 +32,18 @@ class BuildingsController {
       next(error);
     }
   };
+
+  
+  getBuildingRooms = async (req, res, next) => {
+    try {
+      const id = Number(req.params.id);
+      const rooms = await this.buildingsService.getBuildingRooms(id);
+      res.status(200).json(rooms);
+    } catch (error) {
+      next(error);
+    }
+  };
+
 }
 
 module.exports = BuildingsController;

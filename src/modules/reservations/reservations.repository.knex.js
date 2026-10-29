@@ -1,125 +1,251 @@
 const db = require('../../db');
+const ValidationError = require('../../errors/validation.error');
+
+function mapReservation(row) {
+    if (!row) return null;
+    return {
+        id: row.id,
+        roomId: row.room_id ?? row.roomId,
+        title: row.title,
+        startTime: row.start_time ?? row.startTime,
+        endTime: row.end_time ?? row.endTime,
+        status: row.status,
+        createdAt: row.created_at ?? row.createdAt,
+        updatedAt: row.updated_at ?? row.updatedAt
+    };
+}
 
 class ReservationsRepositoryKnex {
-  async findAll() {
-    return await db('reservations')
-      .join('rooms', 'reservations.room_id', '=', 'rooms.id')
-      .select(
-        'reservations.id as id',
-        'reservations.room_id as roomId',
-        'reservations.title as title',
-        'reservations.start_time as startTime',
-        'reservations.end_time as endTime',
-        'reservations.status as status',
-        'reservations.created_at as createdAt',
-        'reservations.updated_at as updatedAt',
-        'rooms.name as room_name',
-        'rooms.capacity as room_capacity'
-      );
-  }
-
-  async findById(id) {
-    const reservation = await db('reservations')
-      .where('reservations.id', id)
-      .join('rooms', 'reservations.room_id', '=', 'rooms.id')
-      .select(
-        'reservations.id as id',
-        'reservations.room_id as roomId',
-        'reservations.title as title',
-        'reservations.start_time as startTime',
-        'reservations.end_time as endTime',
-        'reservations.status as status',
-        'reservations.created_at as createdAt',
-        'reservations.updated_at as updatedAt',
-        'rooms.name as room_name',
-        'rooms.capacity as room_capacity'
-      )
-      .first();
-
-    return reservation || null;
-  }
-
-  async findByRoomId(roomId) {
-    return await db('reservations')
-      .where('reservations.room_id', roomId)
-      .join('rooms', 'reservations.room_id', '=', 'rooms.id')
-      .select(
-        'reservations.id as id',
-        'reservations.room_id as roomId',
-        'reservations.title as title',
-        'reservations.start_time as startTime',
-        'reservations.end_time as endTime',
-        'reservations.status as status',
-        'reservations.created_at as createdAt',
-        'reservations.updated_at as updatedAt'
-      );
-  }
-
-  // Kluczowa metoda do wykrywania nakładania się rezerwacji w tej samej sali
-  async findConflicting(roomId, startTime, endTime, excludeId = null) {
-    const query = db('reservations')
-      .where('room_id', roomId)
-      .andWhere('status', '!=', 'CANCELLED') // Anulowane rezerwacje nie blokują terminów
-      .andWhere(function() {
-        // Warunek nakładania się przedziałów czasowych: (StartA < EndB) AND (EndA > StartB)
-        this.where('start_time', '<', endTime)
-            .andWhere('end_time', '>', startTime);
-      });
-
-    if (excludeId) {
-      query.andWhere('id', '!=', excludeId);
+    async findAll() {
+        const rows = await db('reservations')
+            .select(
+                'id',
+                'room_id',
+                'title',
+                'start_time',
+                'end_time',
+                'status',
+                'created_at',
+                'updated_at'
+            )
+            .orderBy('start_time', 'asc');
+        return rows.map(mapReservation);
     }
 
-    return await query.first();
-  }
+    async findById(id) {
+        const row = await db('reservations')
+            .where({ id })
+            .first();
+        return mapReservation(row);
+    }
 
-  async create(reservationData) {
-    const [newReservation] = await db('reservations')
-      .insert({
-        room_id: reservationData.roomId || reservationData.room_id,
-        title: reservationData.title,
-        start_time: reservationData.startTime || reservationData.start_time,
-        end_time: reservationData.endTime || reservationData.end_time,
-        status: reservationData.status || 'CONFIRMED'
-      })
-      .returning('*');
 
-    return {
-      id: newReservation.id,
-      roomId: newReservation.room_id,
-      title: newReservation.title,
-      startTime: newReservation.start_time,
-      endTime: newReservation.end_time,
-      status: newReservation.status,
-      createdAt: newReservation.created_at,
-      updatedAt: newReservation.updated_at
-    };
-  }
+    async findByIdWithRoomAndBuilding(id) {
+        const row = await db('reservations as r')
+            .join('rooms as rm', 'r.room_id', 'rm.id')
+            .join('buildings as b', 'rm.building_id', 'b.id')
+            .where('r.id', id)
+            .select(
+                'r.id as id',
+                'r.room_id as roomId',
+                'r.title as title',
+                'r.start_time as startTime',
+                'r.end_time as endTime',
+                'r.status as status',
+                'r.created_at as createdAt',
+                'r.updated_at as updatedAt',
 
-  async updateStatus(id, status) {
-    const updateData = {
-      status: status,
-      updated_at: db.fn.now()
-    };
+                'rm.id as room_id',
+                'rm.name as room_name',
+                'rm.capacity as room_capacity',
 
-    const [updated] = await db('reservations')
-      .where({ id })
-      .update(updateData)
-      .returning('*');
+                'b.id as building_id',
+                'b.name as building_name',
+                'b.address as building_address'
+            )
+            .first();
 
-    if (!updated) return null;
+        if (!row) {
+            return null;
+        }
 
-    return {
-      id: updated.id,
-      roomId: updated.room_id,
-      title: updated.title,
-      startTime: updated.start_time,
-      endTime: updated.end_time,
-      status: updated.status,
-      createdAt: updated.created_at,
-      updatedAt: updated.updated_at
-    };
-  }
+        return {
+            id: row.id,
+            roomId: row.roomId,
+            title: row.title,
+            startTime: row.startTime,
+            endTime: row.endTime,
+            status: row.status,
+            createdAt: row.createdAt,
+            updatedAt: row.updatedAt,
+            room: {
+                id: row.room_id,
+                name: row.room_name,
+                capacity: row.room_capacity,
+                building: {
+                    id: row.building_id,
+                    name: row.building_name,
+                    address: row.building_address
+                }
+            }
+        };
+    }
+
+
+    async findByRoomId(roomId) {
+        const rows = await db('reservations')
+            .where({ room_id: roomId })
+            .select(
+                'id',
+                'room_id',
+                'title',
+                'start_time',
+                'end_time',
+                'status',
+                'created_at',
+                'updated_at'
+            )
+            .orderBy('start_time', 'asc');
+        return rows.map(mapReservation);
+    }
+
+    // Przedziały półotwarte: start < end istniejącej rezerwacji
+    // oraz koniec istniejącej rezerwacji > start nowej.
+    async findConflicting(roomId, startTime, endTime, excludeId = null) {
+        const query = db('reservations')
+            .where('room_id', roomId)
+            .whereNot('status', 'CANCELLED')
+            .andWhere('start_time', '<', endTime)
+            .andWhere('end_time', '>', startTime);
+
+        if (excludeId !== null && excludeId !== undefined) {
+            query.andWhere('id', '!=', excludeId);
+        }
+
+        const row = await query.first();
+        return mapReservation(row);
+    }
+
+    async create(reservationData) {
+        const [row] = await db('reservations')
+            .insert({
+                room_id: reservationData.roomId ?? reservationData.room_id,
+                title: reservationData.title,
+                start_time: reservationData.startTime ?? reservationData.start_time,
+                end_time: reservationData.endTime ?? reservationData.end_time,
+                status: reservationData.status ?? 'CONFIRMED'
+            })
+            .returning('*');
+
+        return mapReservation(row);
+    }
+
+    async updateStatus(id, status) {
+        const [row] = await db('reservations')
+            .where({ id })
+            .update({
+                status,
+                updated_at: db.fn.now()
+            })
+            .returning('*');
+
+        return mapReservation(row);
+    }
+
+    async findPage(filters) {
+        const {
+            roomId,
+            buildingId,
+            status,
+            from,
+            to,
+            page = 1,
+            limit = 20,
+            sort = 'startTime'
+        } = filters;
+
+        const sortColumns = {
+            startTime: 'r.start_time',
+            createdAt: 'r.created_at'
+        };
+
+        const descending = sort.startsWith('-');
+        const sortName = descending ? sort.slice(1) : sort;
+
+        // W aktualnym schemacie nie ma kolumny participants.
+        if (!sortColumns[sortName]) {
+            throw new ValidationError(
+                'Sortowanie po participants wymaga zdefiniowania danych uczestników'
+            );
+        }
+
+        const applyFilters = (query) => {
+            if (roomId !== undefined) {
+                query.where('r.room_id', roomId);
+            }
+
+            if (buildingId !== undefined) {
+                query.where('rm.building_id', buildingId);
+            }
+
+            if (status !== undefined) {
+                query.where('r.status', status);
+            }
+
+            // Rezerwacja musi kończyć się po początku zakresu.
+            if (from) {
+                query.where('r.end_time', '>', new Date(from));
+            }
+
+            // Rezerwacja musi zaczynać się przed końcem zakresu.
+            if (to) {
+                query.where('r.start_time', '<', new Date(to));
+            }
+
+            return query;
+        };
+
+        const countQuery = applyFilters(
+            db('reservations as r')
+                .join('rooms as rm', 'r.room_id', 'rm.id')
+        ).countDistinct({ total: 'r.id' }).first();
+
+        const dataQuery = applyFilters(
+            db('reservations as r')
+                .join('rooms as rm', 'r.room_id', 'rm.id')
+        )
+            .select(
+                'r.id',
+                'r.room_id',
+                'r.title',
+                'r.start_time',
+                'r.end_time',
+                'r.status',
+                'r.created_at',
+                'r.updated_at'
+            )
+            .orderBy(sortColumns[sortName], descending ? 'desc' : 'asc')
+            .orderBy('r.id', 'asc')
+            .limit(limit)
+            .offset((page - 1) * limit);
+
+        const [countResult, rows] = await Promise.all([
+            countQuery,
+            dataQuery
+        ]);
+
+        const total = Number(countResult?.total ?? 0);
+
+        return {
+            data: rows.map(mapReservation),
+            meta: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit)
+            }
+        };
+    }
 }
 
 module.exports = new ReservationsRepositoryKnex();

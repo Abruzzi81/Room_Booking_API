@@ -1,8 +1,10 @@
+
 const NotFoundError = require('../../errors/not-found.error');
 
 class BuildingsService {
-  constructor(buildingsRepository) {
+  constructor(buildingsRepository, roomsRepository) {
     this.buildingsRepository = buildingsRepository;
+    this.roomsRepository = roomsRepository;
   }
 
   async getAllBuildings() {
@@ -11,10 +13,20 @@ class BuildingsService {
 
   async getBuildingById(id) {
     const building = await this.buildingsRepository.findById(id);
+
     if (!building) {
-      throw new NotFoundError("Building not found");
+      throw new NotFoundError('Building not found');
     }
+
     return building;
+  }
+
+  async getBuildingRooms(id) {
+    // Najpierw sprawdzamy, czy budynek istnieje.
+    await this.getBuildingById(id);
+
+    // Dla istniejącego budynku bez sal repozytorium zwróci [].
+    return await this.roomsRepository.findByBuildingId(id);
   }
 
   async createBuilding(buildingData) {

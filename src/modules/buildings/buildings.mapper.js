@@ -5,9 +5,7 @@ const toBuildingResponse = (building) => {
     name: building.name,
     address: building.address,
     createdAt: building.created_at || building.createdAt,
-    // Obsługa pola roomsCount (wymagana w zadaniu 3)
-    ...(building.rooms_count !== undefined && { roomsCount: Number(building.rooms_count) }),
-    ...(building.roomsCount !== undefined && { roomsCount: Number(building.roomsCount) }),
+    roomsCount: Number(building.rooms_count ?? building.roomsCount ?? 0)
   };
 };
 

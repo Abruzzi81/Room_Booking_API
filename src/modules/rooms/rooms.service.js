@@ -8,7 +8,7 @@ class RoomsService {
   }
 
   async getRoomById(id) {
-    const room = await this.roomsRepository.findById(id);
+    const room = await this.roomsRepository.findByIdWithBuilding(id);
     if (!room) {
       const error = new Error("Room not found");
       error.status = 404;

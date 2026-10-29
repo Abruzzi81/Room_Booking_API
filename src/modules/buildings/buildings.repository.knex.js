@@ -3,11 +3,11 @@ class BuildingsRepositoryKnex {
     this.db = db;
   }
 
-  async findAll() {
+async findAll() {
     return await this.db('buildings')
-      .leftJoin('rooms', 'buildings.id', 'rooms.building_id')
-      .select('buildings.*')
+      .select('buildings.id', 'buildings.name', 'buildings.address', 'buildings.created_at', 'buildings.updated_at')
       .count('rooms.id as rooms_count')
+      .leftJoin('rooms', 'buildings.id', '=', 'rooms.building_id')
       .groupBy('buildings.id');
   }
 

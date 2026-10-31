@@ -231,6 +231,14 @@ class ReservationsRepositoryKnex {
             .limit(limit)
             .offset((page - 1) * limit);
 
+        // Wyświetlamy zapytania SQL i przekazywane do nich parametry.
+        console.log('\n--- SQL: COUNT ---');
+        console.log(countQuery.toSQL());
+
+        console.log('\n--- SQL: DATA ---');
+        console.log(dataQuery.toSQL());
+
+        // Wykonujemy oba zapytania.
         const [countResult, rows] = await Promise.all([
             countQuery,
             dataQuery
@@ -256,8 +264,7 @@ class ReservationsRepositoryKnex {
                 const roomId =
                     reservationData.roomId ?? reservationData.room_id;
 
-                // Blokujemy salę. Inne transakcje rezerwujące tę samą
-                // salę muszą poczekać na zakończenie tej transakcji.
+                // Blokujemy salę na czas wykonywania transakcji.
                 const room = await trx('rooms')
                     .where({ id: roomId })
                     .forUpdate()
@@ -272,7 +279,7 @@ class ReservationsRepositoryKnex {
                 const endTime =
                     reservationData.endTime ?? reservationData.end_time;
 
-                // Sprawdzenie kolizji wewnątrz tej samej transakcji.
+                // Sprawdzamy, czy istnieje kolizja.
                 const conflict = await trx('reservations')
                     .where('room_id', roomId)
                     .where('status', 'CONFIRMED')
@@ -300,7 +307,6 @@ class ReservationsRepositoryKnex {
                 return mapReservation(row);
             });
         } catch (error) {
-            // PostgreSQL: exclusion constraint violation.
             if (error.code === '23P01') {
                 throw new ConflictError(
                     'Room is already booked for this time period',

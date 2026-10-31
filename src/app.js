@@ -7,6 +7,8 @@ const roomsRoutes = require('./modules/rooms/rooms.routes');
 const reservationsRoutes = require('./modules/reservations/reservations.routes');
 const buildingsRoutes = require('./modules/buildings/buildings.routes');
 
+const authRoutes = require('./modules/auth/auth.routes');
+
 function createApp() {
   const app = express();
 
@@ -18,10 +20,7 @@ function createApp() {
   app.use('/api/reservations', reservationsRoutes);
   app.use('/api/buildings', buildingsRoutes);
 
-  // Tymczasowy endpoint do testowania błędu 500 (Zadanie 3)
-  app.get('/api/debug/crash', (req, res, next) => {
-    throw new Error("boom");
-  });
+  app.use('/api/auth', authRoutes);
 
   // Obsługa nieistniejących ścieżek (404 w formacie JSON)
   app.use((req, res, next) => {

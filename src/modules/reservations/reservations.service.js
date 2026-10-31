@@ -26,12 +26,17 @@ class ReservationsService {
 
 
 
-  async createReservation(data) {
+  async createReservation(data, userId) {
     const { roomId, title, startTime, endTime } = data;
 
     const startMs = new Date(startTime).getTime();
     const endMs = new Date(endTime).getTime();
     const currentTime = this.now().getTime();
+    const numericUserId = Number(userId);
+
+    if (!Number.isInteger(numericUserId) || numericUserId <= 0) {
+      throw new AppError('Invalid authenticated user', 401);
+    }
 
     if (startMs < currentTime) {
       throw new AppError(
@@ -63,7 +68,8 @@ class ReservationsService {
       roomId,
       title,
       startTime,
-      endTime
+      endTime,
+      userId: numericUserId
     });
   }
 

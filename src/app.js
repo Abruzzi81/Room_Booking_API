@@ -8,6 +8,7 @@ const reservationsRoutes = require('./modules/reservations/reservations.routes')
 const buildingsRoutes = require('./modules/buildings/buildings.routes');
 
 const authRoutes = require('./modules/auth/auth.routes');
+const { authenticate } = require('./middleware/auth.middleware');
 
 
 function createApp() {
@@ -15,6 +16,20 @@ function createApp() {
 
   app.use(express.json());
   app.use(loggerMiddleware); // Logowanie i X-Request-Id
+
+  app.use((req, res, next) => {
+    const publicRoutes = [
+      req.method === 'POST' && req.path === '/api/auth/register',
+      req.method === 'POST' && req.path === '/api/auth/login',
+      req.path === '/api/docs' || req.path.startsWith('/api/docs/'),
+    ];
+
+    if (publicRoutes.some(Boolean)) {
+      return next();
+    }
+
+    return authenticate(req, res, next);
+  });
 
   // Trasy API
   app.use('/api/rooms', roomsRoutes);

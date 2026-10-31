@@ -37,13 +37,18 @@ class ReservationsController {
   };
 
 
-  createReservation = async (req, res) => {
-    // Korzystamy z req.validated.body (zgodnie z Zadaniem 2)
-    const newReservation = await this.reservationsService.createReservation(req.validated.body);
+  createReservation = async (req, res, next) => {
+    try {
+      const newReservation = await this.reservationsService.createReservation(
+        req.validated.body,
+        req.user.id
+      );
 
-    // Wymóg z Zadania 5B: status 201 oraz nagłówek Location: /api/reservations/{id}
-    res.setHeader('Location', `/api/reservations/${newReservation.id}`);
-    res.status(201).json(toReservationResponse(newReservation));
+      res.setHeader('Location', `/api/reservations/${newReservation.id}`);
+      res.status(201).json(toReservationResponse(newReservation));
+    } catch (error) {
+      next(error);
+    }
   };
 
   cancelReservation = async (req, res) => {

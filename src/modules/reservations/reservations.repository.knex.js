@@ -5,6 +5,7 @@ const NotFoundError = require('../../errors/not-found.error');
 
 function mapReservation(row) {
     if (!row) return null;
+
     return {
         id: row.id,
         roomId: row.room_id ?? row.roomId,
@@ -13,31 +14,48 @@ function mapReservation(row) {
         endTime: row.end_time ?? row.endTime,
         status: row.status,
         createdAt: row.created_at ?? row.createdAt,
-        updatedAt: row.updated_at ?? row.updatedAt
+        updatedAt: row.updated_at ?? row.updatedAt,
+        user: row.user_email
+            ? {
+                id: row.user_id,
+                email: row.user_email
+            }
+            : null
     };
 }
 
 class ReservationsRepositoryKnex {
     async findAll() {
-        const rows = await db('reservations')
+        const rows = await db('reservations as r')
+            .join('users as u', 'r.user_id', 'u.id')
             .select(
-                'id',
-                'room_id',
-                'title',
-                'start_time',
-                'end_time',
-                'status',
-                'created_at',
-                'updated_at'
+                'r.id',
+                'r.room_id',
+                'r.title',
+                'r.start_time',
+                'r.end_time',
+                'r.status',
+                'r.created_at',
+                'r.updated_at',
+                'u.id as user_id',
+                'u.email as user_email'
             )
-            .orderBy('start_time', 'asc');
+            .orderBy('r.start_time', 'asc');
+
         return rows.map(mapReservation);
     }
 
     async findById(id) {
-        const row = await db('reservations')
-            .where({ id })
+        const row = await db('reservations as r')
+            .join('users as u', 'r.user_id', 'u.id')
+            .where('r.id', id)
+            .select(
+                'r.*',
+                'u.id as user_id',
+                'u.email as user_email'
+            )
             .first();
+
         return mapReservation(row);
     }
 
@@ -46,6 +64,7 @@ class ReservationsRepositoryKnex {
         const row = await db('reservations as r')
             .join('rooms as rm', 'r.room_id', 'rm.id')
             .join('buildings as b', 'rm.building_id', 'b.id')
+            .join('users as u', 'r.user_id', 'u.id')
             .where('r.id', id)
             .select(
                 'r.id as id',
@@ -57,6 +76,9 @@ class ReservationsRepositoryKnex {
                 'r.created_at as createdAt',
                 'r.updated_at as updatedAt',
 
+                'u.id as user_id',
+                'u.email as user_email',
+
                 'rm.id as room_id',
                 'rm.name as room_name',
                 'rm.capacity as room_capacity',
@@ -67,9 +89,7 @@ class ReservationsRepositoryKnex {
             )
             .first();
 
-        if (!row) {
-            return null;
-        }
+        if (!row) return null;
 
         return {
             id: row.id,
@@ -80,6 +100,12 @@ class ReservationsRepositoryKnex {
             status: row.status,
             createdAt: row.createdAt,
             updatedAt: row.updatedAt,
+
+            user: {
+                id: row.user_id,
+                email: row.user_email
+            },
+
             room: {
                 id: row.room_id,
                 name: row.room_name,
@@ -95,19 +121,23 @@ class ReservationsRepositoryKnex {
 
 
     async findByRoomId(roomId) {
-        const rows = await db('reservations')
-            .where({ room_id: roomId })
+        const rows = await db('reservations as r')
+            .join('users as u', 'r.user_id', 'u.id')
+            .where('r.room_id', roomId)
             .select(
-                'id',
-                'room_id',
-                'title',
-                'start_time',
-                'end_time',
-                'status',
-                'created_at',
-                'updated_at'
+                'r.id',
+                'r.room_id',
+                'r.title',
+                'r.start_time',
+                'r.end_time',
+                'r.status',
+                'r.created_at',
+                'r.updated_at',
+                'u.id as user_id',
+                'u.email as user_email'
             )
-            .orderBy('start_time', 'asc');
+            .orderBy('r.start_time', 'asc');
+
         return rows.map(mapReservation);
     }
 
@@ -132,26 +162,26 @@ class ReservationsRepositoryKnex {
         const [row] = await db('reservations')
             .insert({
                 room_id: reservationData.roomId ?? reservationData.room_id,
+                user_id: reservationData.userId,
                 title: reservationData.title,
                 start_time: reservationData.startTime ?? reservationData.start_time,
                 end_time: reservationData.endTime ?? reservationData.end_time,
                 status: reservationData.status ?? 'CONFIRMED'
             })
-            .returning('*');
+            .returning('id');
 
-        return mapReservation(row);
+        return this.findById(row.id);
     }
 
     async updateStatus(id, status) {
-        const [row] = await db('reservations')
+        await db('reservations')
             .where({ id })
             .update({
                 status,
                 updated_at: db.fn.now()
-            })
-            .returning('*');
+            });
 
-        return mapReservation(row);
+        return this.findById(id);
     }
 
     async findPage(filters) {
@@ -210,11 +240,13 @@ class ReservationsRepositoryKnex {
         const countQuery = applyFilters(
             db('reservations as r')
                 .join('rooms as rm', 'r.room_id', 'rm.id')
+                .join('users as u', 'r.user_id', 'u.id')
         ).countDistinct({ total: 'r.id' }).first();
 
         const dataQuery = applyFilters(
             db('reservations as r')
                 .join('rooms as rm', 'r.room_id', 'rm.id')
+                .join('users as u', 'r.user_id', 'u.id')
         )
             .select(
                 'r.id',
@@ -224,7 +256,9 @@ class ReservationsRepositoryKnex {
                 'r.end_time',
                 'r.status',
                 'r.created_at',
-                'r.updated_at'
+                'r.updated_at',
+                'u.id as user_id',
+                'u.email as user_email'
             )
             .orderBy(sortColumns[sortName], descending ? 'desc' : 'asc')
             .orderBy('r.id', 'asc')
@@ -297,6 +331,7 @@ class ReservationsRepositoryKnex {
                 const [row] = await trx('reservations')
                     .insert({
                         room_id: roomId,
+                        user_id: reservationData.userId,
                         title: reservationData.title,
                         start_time: startTime,
                         end_time: endTime,
@@ -304,7 +339,16 @@ class ReservationsRepositoryKnex {
                     })
                     .returning('*');
 
-                return mapReservation(row);
+                const user = await trx('users')
+                    .select('id', 'email')
+                    .where({ id: row.user_id })
+                    .first();
+
+                return mapReservation({
+                    ...row,
+                    user_id: user.id,
+                    user_email: user.email
+                });
             });
         } catch (error) {
             if (error.code === '23P01') {

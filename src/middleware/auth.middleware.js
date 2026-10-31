@@ -3,14 +3,24 @@ const jwt = require('jsonwebtoken');
 function authenticate(req, res, next) {
   const authHeader = req.headers.authorization;
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  if (!authHeader) {
     return res.status(401).json({
       code: 'UNAUTHORIZED',
-      message: 'Brak lub nieprawidłowy token',
+      message: 'Brak tokenu',
     });
   }
 
-  const token = authHeader.slice(7);
+  if (
+    !authHeader.startsWith('Bearer ') ||
+    !authHeader.slice(7).trim()
+  ) {
+    return res.status(401).json({
+      code: 'UNAUTHORIZED',
+      message: 'Nieprawidłowy format nagłówka Authorization',
+    });
+  }
+
+  const token = authHeader.slice(7).trim();
   const secret = process.env.JWT_SECRET;
 
   if (!secret) {
@@ -40,13 +50,18 @@ function authenticate(req, res, next) {
 
     return next();
   } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        code: 'TOKEN_EXPIRED',
+        message: 'Token expired',
+      });
+    }
+
     return res.status(401).json({
       code: 'UNAUTHORIZED',
-      message: 'Token jest nieprawidłowy lub wygasł',
+      message: 'Nieprawidłowy lub zmodyfikowany token',
     });
   }
 }
 
-module.exports = {
-  authenticate,
-};
+module.exports = { authenticate };

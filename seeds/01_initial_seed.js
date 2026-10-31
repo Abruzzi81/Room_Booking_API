@@ -3,7 +3,9 @@
  * @param { import("knex").Knex } knex
  * @returns { Promise<void> }
  */
-exports.seed = async function(knex) {
+const bcrypt = require('bcryptjs');
+
+exports.seed = async function (knex) {
   // Czyszczenie tabel
   await knex('reservations').del();
   await knex('rooms').del();
@@ -13,6 +15,27 @@ exports.seed = async function(knex) {
   await knex.raw('ALTER SEQUENCE reservations_id_seq RESTART WITH 1');
   await knex.raw('ALTER SEQUENCE rooms_id_seq RESTART WITH 1');
   await knex.raw('ALTER SEQUENCE buildings_id_seq RESTART WITH 1');
+
+  const adminEmail = 'admin@example.com';
+
+  let admin = await knex('users')
+    .where({ email: adminEmail })
+    .first();
+
+  if (!admin) {
+    const password = process.env.ADMIN_PASSWORD || 'Admin123456!';
+    const passwordHash = await bcrypt.hash(password, 12);
+
+    [admin] = await knex('users')
+      .insert({
+        email: adminEmail,
+        password_hash: passwordHash,
+        role: 'ADMIN',
+      })
+      .returning('*');
+  }
+
+  const adminId = admin.id;
 
   // 1. Budynki
   const buildings = await knex('buildings').insert([
@@ -59,6 +82,7 @@ exports.seed = async function(knex) {
 
     reservations.push({
       room_id: roomIds[i % roomIds.length],
+      user_id: adminId,
       title: `Rezerwacja testowa ${i + 1}`,
       start_time: startTime,
       end_time: endTime,

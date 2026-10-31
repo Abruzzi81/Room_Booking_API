@@ -9,6 +9,7 @@ const buildingsRoutes = require('./modules/buildings/buildings.routes');
 
 const authRoutes = require('./modules/auth/auth.routes');
 
+
 function createApp() {
   const app = express();
 

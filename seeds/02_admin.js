@@ -17,3 +17,10 @@ exports.seed = async function (knex) {
       role: 'ADMIN',
     });
 };
+
+/*  UZYTKOWNIK
+{
+  "email": "nowy.user@test.pl",
+  "password": "Test12345!"
+}
+  */

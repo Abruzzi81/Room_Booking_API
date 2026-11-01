@@ -5,6 +5,8 @@ const RoomsRepositoryKnex = require('../rooms/rooms.repository.knex');
 const BuildingsService = require('./buildings.service');
 const BuildingsController = require('./buildings.controller');
 const validate = require('../../middleware/validate');
+const { authorize } = require('../../middleware/auth.middleware');
+
 const {
   createBuildingSchema,
   getBuildingByIdSchema
@@ -33,6 +35,7 @@ router.get(
 );
 router.post(
   '/',
+  authorize('ADMIN'),
   validate(createBuildingSchema),
   buildingsController.createBuilding
 );

@@ -1,3 +1,4 @@
+
 const ConflictError = require('../../errors/conflict.error');
 const AppError = require('../../errors/app.error');
 const NotFoundError = require('../../errors/not-found.error');
@@ -9,75 +10,90 @@ class ReservationsService {
     this.now = now;
   }
 
-  async getAllReservations(query = {}) {
-    return this.reservationsRepository.findPage(query);
+  async getAllReservations(query = {}, currentUser) {
+    if (currentUser.role === 'USER' && query.userId !== undefined) {
+      throw new AppError(
+        'USER cannot filter reservations by userId',
+        403,
+        'FORBIDDEN'
+      );
+    }
+
+    const filters = { ...query };
+
+    if (currentUser.role === 'USER') {
+      filters.userId = Number(currentUser.id);
+    }
+
+    return this.reservationsRepository.findPage(filters);
   }
 
-  async getReservationById(id) {
+  async getReservationById(id, currentUser) {
     const reservation =
       await this.reservationsRepository.findByIdWithRoomAndBuilding(id);
 
-    if (!reservation) {
+    if (
+      !reservation ||
+      (
+        currentUser.role !== 'ADMIN' &&
+        Number(reservation.userId) !== Number(currentUser.id)
+      )
+    ) {
       throw new NotFoundError('Reservation not found');
     }
 
     return reservation;
   }
 
-
-
   async createReservation(data, userId) {
-    const { roomId, title, startTime, endTime } = data;
+    const room = await this.roomsRepository.findById(data.roomId);
 
-    const startMs = new Date(startTime).getTime();
-    const endMs = new Date(endTime).getTime();
-    const currentTime = this.now().getTime();
-    const numericUserId = Number(userId);
-
-    if (!Number.isInteger(numericUserId) || numericUserId <= 0) {
-      throw new AppError('Invalid authenticated user', 401);
+    if (!room) {
+      throw new NotFoundError('Room not found');
     }
 
-    if (startMs < currentTime) {
+    const startTime = new Date(data.startTime);
+    const endTime = new Date(data.endTime);
+
+    if (
+      Number.isNaN(startTime.getTime()) ||
+      Number.isNaN(endTime.getTime()) ||
+      startTime >= endTime
+    ) {
       throw new AppError(
-        'Start time cannot be in the past',
+        'Invalid reservation time range',
         400,
-        'INVALID_START_TIME'
+        'VALIDATION_ERROR'
       );
     }
 
-    if (endMs <= startMs) {
+    if (startTime <= this.now()) {
       throw new AppError(
-        'End time must be later than start time',
+        'Reservation must start in the future',
         400,
-        'INVALID_TIME_RANGE'
-      );
-    }
-
-    const durationMinutes = (endMs - startMs) / (1000 * 60);
-
-    if (durationMinutes < 15 || durationMinutes > 8 * 60) {
-      throw new AppError(
-        'Reservation duration must be between 15 minutes and 8 hours',
-        400,
-        'INVALID_DURATION'
+        'VALIDATION_ERROR'
       );
     }
 
     return this.reservationsRepository.createWithRoomLock({
-      roomId,
-      title,
+      roomId: data.roomId,
+      userId: Number(userId),
+      title: data.title,
       startTime,
-      endTime,
-      userId: numericUserId
+      endTime
     });
   }
 
-
-  async cancelReservation(id) {
+  async cancelReservation(id, currentUser) {
     const reservation = await this.reservationsRepository.findById(id);
 
-    if (!reservation) {
+    if (
+      !reservation ||
+      (
+        currentUser.role !== 'ADMIN' &&
+        Number(reservation.userId) !== Number(currentUser.id)
+      )
+    ) {
       throw new NotFoundError('Reservation not found');
     }
 

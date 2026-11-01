@@ -3,6 +3,8 @@ const roomsRepository = require('./rooms.repository.knex');
 const RoomsService = require('./rooms.service');
 const RoomsController = require('./rooms.controller');
 const validate = require('../../middleware/validate');
+const { authorize } = require('../../middleware/auth.middleware');
+
 const { 
   createRoomSchema, 
   getRoomsSchema, 
@@ -15,6 +17,11 @@ const roomsController = new RoomsController(roomsService);
 
 router.get('/', validate(getRoomsSchema), roomsController.getRooms);
 router.get('/:id', validate(roomIdParamSchema), roomsController.getRoomById);
-router.post('/', validate(createRoomSchema), roomsController.createRoom);
+router.post(
+  '/',
+  authorize('ADMIN'),
+  validate(createRoomSchema),
+  roomsController.createRoom
+);
 
 module.exports = router;

@@ -1,0 +1,79 @@
+RAPORT TESTÓW AUTORYZACJI API
+
+Data: 1.11.2026, 19:22:43
+
+
+
+PASS | T01 - Buildings bez tokenu | HTTP 401 | Oczekiwano: 401
+{"code":"UNAUTHORIZED","message":"Brak tokenu"}
+
+PASS | T02 - Rooms bez tokenu | HTTP 401 | Oczekiwano: 401
+{"code":"UNAUTHORIZED","message":"Brak tokenu"}
+
+PASS | T03 - Me jako USER | HTTP 200 | Oczekiwano: 200
+{"id":19,"email":"user1@example.com","role":"USER","createdAt":"2026-10-31T19:27:15.528Z"}
+
+PASS | T04 - Me jako ADMIN | HTTP 200 | Oczekiwano: 200
+{"id":14,"email":"admin@example.com","role":"ADMIN","createdAt":"2026-10-31T17:09:25.976Z"}
+
+PASS | T05 - GET buildings USER | HTTP 200 | Oczekiwano: 200
+[{"id":4,"name":"Test ADMIN 1793557255249","address":"Testowa 2, Kraków","createdAt":"2026-11-01T18:20:55.468Z","roomsCount":0},{"id":2,"name":"Wydział Informatyki","address":"ul. Akademicka 3","createdAt":"2026-11-01T18:14:09.100Z","roomsCount":2},{"id":3,"name":"Test ADMIN 1793556907167","address":"Testowa 2, Kraków","createdAt":"2026-11-01T18:15:07.429Z","roomsCount":0},{"id":1,"name":"Budynek Główny","address":"ul. Politechniki 1","createdAt":"2026-11-01T18:14:09.100Z","roomsCount":5}]
+
+PASS | T06 - GET buildings ADMIN | HTTP 200 | Oczekiwano: 200
+[{"id":4,"name":"Test ADMIN 1793557255249","address":"Testowa 2, Kraków","createdAt":"2026-11-01T18:20:55.468Z","roomsCount":0},{"id":2,"name":"Wydział Informatyki","address":"ul. Akademicka 3","createdAt":"2026-11-01T18:14:09.100Z","roomsCount":2},{"id":3,"name":"Test ADMIN 1793556907167","address":"Testowa 2, Kraków","createdAt":"2026-11-01T18:15:07.429Z","roomsCount":0},{"id":1,"name":"Budynek Główny","address":"ul. Politechniki 1","createdAt":"2026-11-01T18:14:09.100Z","roomsCount":5}]
+
+PASS | T07 - POST buildings USER | HTTP 403 | Oczekiwano: 403
+{"code":"FORBIDDEN","message":"Brak uprawnień do wykonania tej operacji"}
+
+PASS | T08 - POST buildings ADMIN | HTTP 201 | Oczekiwano: 201
+{"id":5,"name":"Test ADMIN 1793557363220","address":"Testowa 2, Kraków","createdAt":"2026-11-01T18:22:43.447Z","roomsCount":0}
+
+PASS | T09 - GET rooms USER | HTTP 200 | Oczekiwano: 200
+[{"id":7,"name":"Sala ADMIN 1793557255249","capacity":10,"createdAt":"2026-11-01T18:20:55.504Z","updatedAt":"2026-11-01T18:20:55.504Z","building_id":1,"building_name":"Budynek Główny"},{"id":6,"name":"Sala ADMIN 1793556907167","capacity":10,"createdAt":"2026-11-01T18:15:07.457Z","updatedAt":"2026-11-01T18:15:07.457Z","building_id":1,"building_name":"Budynek Główny"},{"id":3,"name":"Audytorium","capacity":200,"createdAt":"2026-11-01T18:14:09.109Z","updatedAt":"2026-11-01T18:14:09.109Z","building_id":1,"building_name":"Budynek Główny"},{"id":2,"name":"102","capacity":50,"createdAt":"2026-11-01T18:14:09.109Z","updatedAt":"2026-11-01T18:14:09.109Z","building_id":1,"building_name":"Budynek Główny"},{"id":1,"name":"101","capacity":30,"createdAt":"2026-11-01T18:14:09.109Z","updatedAt":"2026-11-01T18:14:09.109Z","building_id":1,"building_name":"Budynek Główny"},{"id":5,"name":"204","capacity":40,"createdAt":"2026-11-01T18:14:09.109Z","updatedAt":"2026-11-01T18:14:09.109Z","building_id":2,"building_name":"Wydział Informatyki"},{"id":4,"name":"Laboratorium A","capacity":20,"createdAt":"2026-11-01T18:14:09.109Z","updatedAt":"2026-11-01T18:14:09.109Z","building_id":2,"building_name":"Wydział Informatyki"}]
+
+PASS | T10 - GET rooms ADMIN | HTTP 200 | Oczekiwano: 200
+[{"id":7,"name":"Sala ADMIN 1793557255249","capacity":10,"createdAt":"2026-11-01T18:20:55.504Z","updatedAt":"2026-11-01T18:20:55.504Z","building_id":1,"building_name":"Budynek Główny"},{"id":6,"name":"Sala ADMIN 1793556907167","capacity":10,"createdAt":"2026-11-01T18:15:07.457Z","updatedAt":"2026-11-01T18:15:07.457Z","building_id":1,"building_name":"Budynek Główny"},{"id":3,"name":"Audytorium","capacity":200,"createdAt":"2026-11-01T18:14:09.109Z","updatedAt":"2026-11-01T18:14:09.109Z","building_id":1,"building_name":"Budynek Główny"},{"id":2,"name":"102","capacity":50,"createdAt":"2026-11-01T18:14:09.109Z","updatedAt":"2026-11-01T18:14:09.109Z","building_id":1,"building_name":"Budynek Główny"},{"id":1,"name":"101","capacity":30,"createdAt":"2026-11-01T18:14:09.109Z","updatedAt":"2026-11-01T18:14:09.109Z","building_id":1,"building_name":"Budynek Główny"},{"id":5,"name":"204","capacity":40,"createdAt":"2026-11-01T18:14:09.109Z","updatedAt":"2026-11-01T18:14:09.109Z","building_id":2,"building_name":"Wydział Informatyki"},{"id":4,"name":"Laboratorium A","capacity":20,"createdAt":"2026-11-01T18:14:09.109Z","updatedAt":"2026-11-01T18:14:09.109Z","building_id":2,"building_name":"Wydział Informatyki"}]
+
+PASS | T11 - POST rooms USER | HTTP 403 | Oczekiwano: 403
+{"code":"FORBIDDEN","message":"Brak uprawnień do wykonania tej operacji"}
+
+PASS | T12 - POST rooms ADMIN | HTTP 201 | Oczekiwano: 201
+{"id":8,"name":"Sala ADMIN 1793557363220","capacity":10,"buildingId":1}
+
+PASS | T13 - GET reservations USER | HTTP 200 | Oczekiwano: 200
+{"data":[{"id":11,"roomId":1,"title":"Rezerwacja USER 1 1","startTime":"2026-11-02T16:14:09.119Z","endTime":"2026-11-02T17:14:09.119Z","status":"CONFIRMED","createdAt":"2026-11-01T18:14:09.121Z","updatedAt":"2026-11-01T18:14:09.121Z","user":{"id":19,"email":"user1@example.com"}},{"id":12,"roomId":2,"title":"Rezerwacja USER 1 2","startTime":"2026-11-02T18:14:09.119Z","endTime":"2026-11-02T19:14:09.119Z","status":"CANCELLED","createdAt":"2026-11-01T18:14:09.121Z","updatedAt":"2026-11-01T18:14:09.121Z","user":{"id":19,"email":"user1@example.com"}},{"id":13,"roomId":3,"title":"Rezerwacja USER 1 3","startTime":"2026-11-02T20:14:09.119Z","endTime":"2026-11-02T21:14:09.119Z","status":"PENDING","createdAt":"2026-11-01T18:14:09.121Z","updatedAt":"2026-11-01T18:14:09.121Z","user":{"id":19,"email":"user1@example.com"}},{"id":14,"roomId":4,"title":"Rezerwacja USER 1 4","startTime":"2026-11-02T22:14:09.119Z","endTime":"2026-11-02T23:14:09.119Z","status":"CONFIRMED","createdAt":"2026-11-01T18:14:09.121Z","updatedAt":"2026-11-01T18:14:09.121Z","user":{"id":19,"email":"user1@example.com"}},{"id":15,"roomId":5,"title":"Rezerwacja USER 1 5","startTime":"2026-11-03T00:14:09.119Z","endTime":"2026-11-03T01:14:09.119Z","status":"CONFIRMED","createdAt":"2026-11-01T18:14:09.121Z","updatedAt":"2026-11-01T18:14:09.121Z","user":{"id":19,"email":"user1@example.com"}}],"meta":{"page":1,"limit":20,"total":5,"totalPages":1}}
+
+PASS | T14 - GET reservations ADMIN | HTTP 200 | Oczekiwano: 200
+{"data":[{"id":1,"roomId":1,"title":"Rezerwacja ADMIN 1","startTime":"2026-11-01T20:14:09.119Z","endTime":"2026-11-01T21:14:09.119Z","status":"CONFIRMED","createdAt":"2026-11-01T18:14:09.121Z","updatedAt":"2026-11-01T18:14:09.121Z","user":{"id":14,"email":"admin@example.com"}},{"id":2,"roomId":2,"title":"Rezerwacja ADMIN 2","startTime":"2026-11-01T22:14:09.119Z","endTime":"2026-11-01T23:14:09.119Z","status":"CANCELLED","createdAt":"2026-11-01T18:14:09.121Z","updatedAt":"2026-11-01T18:14:09.121Z","user":{"id":14,"email":"admin@example.com"}},{"id":3,"roomId":3,"title":"Rezerwacja ADMIN 3","startTime":"2026-11-02T00:14:09.119Z","endTime":"2026-11-02T01:14:09.119Z","status":"PENDING","createdAt":"2026-11-01T18:14:09.121Z","updatedAt":"2026-11-01T18:14:09.121Z","user":{"id":14,"email":"admin@example.com"}},{"id":4,"roomId":4,"title":"Rezerwacja ADMIN 4","startTime":"2026-11-02T02:14:09.119Z","endTime":"2026-11-02T03:14:09.119Z","status":"CONFIRMED","createdAt":"2026-11-01T18:14:09.121Z","updatedAt":"2026-11-01T18:14:09.121Z","user":{"id":14,"email":"admin@example.com"}},{"id":5,"roomId":5,"title":"Rezerwacja ADMIN 5","startTime":"2026-11-02T04:14:09.119Z","endTime":"2026-11-02T05:14:09.119Z","status":"CONFIRMED","createdAt":"2026-11-01T18:14:09.121Z","updatedAt":"2026-11-01T18:14:09.121Z","user":{"id":14,"email":"admin@example.com"}},{"id":6,"roomId":1,"title":"Rezerwacja ADMIN 6","startTime":"2026-11-02T06:14:09.119Z","endTime":"2026-11-02T07:14:09.119Z","status":"CONFIRMED","createdAt":"2026-11-01T18:14:09.121Z","updatedAt":"2026-11-01T18:14:09.121Z","user":{"id":14,"email":"admin@example.com"}},{"id":7,"roomId":2,"title":"Rezerwacja ADMIN 7","startTime":"2026-11-02T08:14:09.119Z","endTime":"2026-11-02T09:14:09.119Z","status":"CONFIRMED","createdAt":"2026-11-01T18:14:09.121Z","updatedAt":"2026-11-01T18:14:09.121Z","user":{"id":14,"email":"admin@example.com"}},{"id":8,"roomId":3,"title":"Rezerwacja ADMIN 8","startTime":"2026-11-02T10:14:09.119Z","endTime":"2026-11-02T11:14:09.119Z","status":"CONFIRMED","createdAt":"2026-11-01T18:14:09.121Z","updatedAt":"2026-11-01T18:14:09.121Z","user":{"id":14,"email":"admin@example.com"}},{"id":9,"roomId":4,"title":"Rezerwacja ADMIN 9","startTime":"2026-11-02T12:14:09.119Z","endTime":"2026-11-02T13:14:09.119Z","status":"CONFIRMED","createdAt":"2026-11-01T18:14:09.121Z","updatedAt":"2026-11-01T18:14:09.121Z","user":{"id":14,"email":"admin@example.com"}},{"id":10,"roomId":5,"title":"Rezerwacja ADMIN 10","startTime":"2026-11-02T14:14:09.119Z","endTime":"2026-11-02T15:14:09.119Z","status":"CONFIRMED","createdAt":"2026-11-01T18:14:09.121Z","updatedAt":"2026-11-01T18:14:09.121Z","user":{"id":14,"email":"admin@example.com"}},{"id":11,"roomId":1,"title":"Rezerwacja USER 1 1","startTime":"2026-11-02T16:14:09.119Z","endTime":"2026-11-02T17:14:09.119Z","status":"CONFIRMED","createdAt":"2026-11-01T18:14:09.121Z","updatedAt":"2026-11-01T18:14:09.121Z","user":{"id":19,"email":"user1@example.com"}},{"id":12,"roomId":2,"title":"Rezerwacja USER 1 2","startTime":"2026-11-02T18:14:09.119Z","endTime":"2026-11-02T19:14:09.119Z","status":"CANCELLED","createdAt":"2026-11-01T18:14:09.121Z","updatedAt":"2026-11-01T18:14:09.121Z","user":{"id":19,"email":"user1@example.com"}},{"id":13,"roomId":3,"title":"Rezerwacja USER 1 3","startTime":"2026-11-02T20:14:09.119Z","endTime":"2026-11-02T21:14:09.119Z","status":"PENDING","createdAt":"2026-11-01T18:14:09.121Z","updatedAt":"2026-11-01T18:14:09.121Z","user":{"id":19,"email":"user1@example.com"}},{"id":14,"roomId":4,"title":"Rezerwacja USER 1 4","startTime":"2026-11-02T22:14:09.119Z","endTime":"2026-11-02T23:14:09.119Z","status":"CONFIRMED","createdAt":"2026-11-01T18:14:09.121Z","updatedAt":"2026-11-01T18:14:09.121Z","user":{"id":19,"email":"user1@example.com"}},{"id":15,"roomId":5,"title":"Rezerwacja USER 1 5","startTime":"2026-11-03T00:14:09.119Z","endTime":"2026-11-03T01:14:09.119Z","status":"CONFIRMED","createdAt":"2026-11-01T18:14:09.121Z","updatedAt":"2026-11-01T18:14:09.121Z","user":{"id":19,"email":"user1@example.com"}},{"id":16,"roomId":1,"title":"Rezerwacja USER 2 1","startTime":"2026-11-03T02:14:09.119Z","endTime":"2026-11-03T03:14:09.119Z","status":"CONFIRMED","createdAt":"2026-11-01T18:14:09.121Z","updatedAt":"2026-11-01T18:14:09.121Z","user":{"id":20,"email":"user2@example.com"}},{"id":17,"roomId":2,"title":"Rezerwacja USER 2 2","startTime":"2026-11-03T04:14:09.119Z","endTime":"2026-11-03T05:14:09.119Z","status":"CANCELLED","createdAt":"2026-11-01T18:14:09.121Z","updatedAt":"2026-11-01T18:14:09.121Z","user":{"id":20,"email":"user2@example.com"}},{"id":18,"roomId":3,"title":"Rezerwacja USER 2 3","startTime":"2026-11-03T06:14:09.119Z","endTime":"2026-11-03T07:14:09.119Z","status":"PENDING","createdAt":"2026-11-01T18:14:09.121Z","updatedAt":"2026-11-01T18:14:09.121Z","user":{"id":20,"email":"user2@example.com"}},{"id":19,"roomId":4,"title":"Rezerwacja USER 2 4","startTime":"2026-11-03T08:14:09.119Z","endTime":"2026-11-03T09:14:09.119Z","status":"CONFIRMED","createdAt":"2026-11-01T18:14:09.121Z","updatedAt":"2026-11-01T18:14:09.121Z","user":{"id":20,"email":"user2@example.com"}},{"id":20,"roomId":5,"title":"Rezerwacja USER 2 5","startTime":"2026-11-03T10:14:09.119Z","endTime":"2026-11-03T11:14:09.119Z","status":"CONFIRMED","createdAt":"2026-11-01T18:14:09.121Z","updatedAt":"2026-11-01T18:14:09.121Z","user":{"id":20,"email":"user2@example.com"}}],"meta":{"page":1,"limit":20,"total":20,"totalPages":1}}
+
+PASS | T15 - USER filtruje po userId | HTTP 403 | Oczekiwano: 403
+{"error":{"code":"FORBIDDEN","message":"USER cannot filter reservations by userId","requestId":"da1e15a9-0a93-474b-b73e-59b8ae1bf6c2"}}
+
+PASS | T16 - ADMIN filtruje po userId | HTTP 200 | Oczekiwano: 200
+{"data":[],"meta":{"page":1,"limit":20,"total":0,"totalPages":0}}
+
+PASS | T17 - USER pobiera własną rezerwację | HTTP 200 | Oczekiwano: 200
+{"id":11,"roomId":1,"title":"Rezerwacja USER 1 1","startTime":"2026-11-02T16:14:09.119Z","endTime":"2026-11-02T17:14:09.119Z","status":"CONFIRMED","createdAt":"2026-11-01T18:14:09.121Z","updatedAt":"2026-11-01T18:14:09.121Z","user":{"id":19,"email":"user1@example.com"},"room":{"id":1,"name":"101","capacity":30,"building":{"id":1,"name":"Budynek Główny","address":"ul. Politechniki 1"}}}
+
+PASS | T18 - USER pobiera cudzą rezerwację | HTTP 404 | Oczekiwano: 404
+{"error":{"code":"NOT_FOUND","message":"Reservation not found","requestId":"0b048b66-9aa2-4615-aafa-523d5d910788"}}
+
+PASS | T19 - ADMIN pobiera cudzą rezerwację | HTTP 200 | Oczekiwano: 200
+{"id":20,"roomId":5,"title":"Rezerwacja USER 2 5","startTime":"2026-11-03T10:14:09.119Z","endTime":"2026-11-03T11:14:09.119Z","status":"CONFIRMED","createdAt":"2026-11-01T18:14:09.121Z","updatedAt":"2026-11-01T18:14:09.121Z","user":{"id":20,"email":"user2@example.com"},"room":{"id":5,"name":"204","capacity":40,"building":{"id":2,"name":"Wydział Informatyki","address":"ul. Akademicka 3"}}}
+
+FAIL | T20 - USER anuluje własną rezerwację | HTTP 404 | Oczekiwano: 200
+{"error":{"code":"NOT_FOUND","message":"Route /api/reservations/11/cancel not found","requestId":"0d633737-3d97-41a1-bc37-ffa39f7b1f65"}}
+
+PASS | T21 - USER anuluje cudzą rezerwację | HTTP 404 | Oczekiwano: 404
+{"error":{"code":"NOT_FOUND","message":"Route /api/reservations/20/cancel not found","requestId":"66c9ed40-f3ad-44af-a831-3cc8b19591fa"}}
+
+FAIL | T22 - ADMIN anuluje cudzą rezerwację | HTTP 404 | Oczekiwano: 200
+{"error":{"code":"NOT_FOUND","message":"Route /api/reservations/20/cancel not found","requestId":"ba7fc3bf-c18b-4aa0-ac92-94bac171f525"}}
+
+
+
+WYKONANE: 22
+
+ZALICZONE: 20
+
+NIEZALICZONE: 2

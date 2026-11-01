@@ -15,6 +15,7 @@ const getReservationsSchema = z.object({
   query: z.object({
     roomId: z.coerce.number().int().positive().optional(),
     buildingId: z.coerce.number().int().positive().optional(),
+    userId: z.coerce.number().int().positive().optional(),
 
     status: z.enum(['CONFIRMED', 'CANCELLED']).optional(),
 

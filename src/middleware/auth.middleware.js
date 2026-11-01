@@ -64,4 +64,17 @@ function authenticate(req, res, next) {
   }
 }
 
-module.exports = { authenticate };
+function authorize(...roles) {
+  return (req, res, next) => {
+    if (!req.user || !roles.includes(req.user.role)) {
+      return res.status(403).json({
+        code: 'FORBIDDEN',
+        message: 'Brak uprawnień do wykonania tej operacji',
+      });
+    }
+
+    return next();
+  };
+}
+
+module.exports = { authenticate, authorize };

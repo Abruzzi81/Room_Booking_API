@@ -38,12 +38,11 @@ router.post(
   reservationsController.createReservation
 );
 
-router.delete(
-  '/:id',
+router.patch(
+  '/:id/cancel',
   validate(reservationIdParamSchema),
   reservationsController.cancelReservation
 );
-
 
 router.get(
   '/:id',

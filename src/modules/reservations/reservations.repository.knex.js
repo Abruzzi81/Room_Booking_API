@@ -1,3 +1,4 @@
+
 const db = require('../../db');
 const ValidationError = require('../../errors/validation.error');
 const ConflictError = require('../../errors/conflict.error');
@@ -9,6 +10,7 @@ function mapReservation(row) {
     return {
         id: row.id,
         roomId: row.room_id ?? row.roomId,
+        userId: row.user_id ?? row.userId,
         title: row.title,
         startTime: row.start_time ?? row.startTime,
         endTime: row.end_time ?? row.endTime,
@@ -59,7 +61,6 @@ class ReservationsRepositoryKnex {
         return mapReservation(row);
     }
 
-
     async findByIdWithRoomAndBuilding(id) {
         const row = await db('reservations as r')
             .join('rooms as rm', 'r.room_id', 'rm.id')
@@ -94,6 +95,7 @@ class ReservationsRepositoryKnex {
         return {
             id: row.id,
             roomId: row.roomId,
+            userId: row.user_id,
             title: row.title,
             startTime: row.startTime,
             endTime: row.endTime,
@@ -119,7 +121,6 @@ class ReservationsRepositoryKnex {
         };
     }
 
-
     async findByRoomId(roomId) {
         const rows = await db('reservations as r')
             .join('users as u', 'r.user_id', 'u.id')
@@ -141,7 +142,8 @@ class ReservationsRepositoryKnex {
         return rows.map(mapReservation);
     }
 
-    // Przedziały półotwarte: start < end istniejącej rezerwacji
+    // Przedziały półotwarte:
+    // start istniejącej rezerwacji < koniec nowej
     // oraz koniec istniejącej rezerwacji > start nowej.
     async findConflicting(roomId, startTime, endTime, excludeId = null) {
         const query = db('reservations')
@@ -188,6 +190,7 @@ class ReservationsRepositoryKnex {
         const {
             roomId,
             buildingId,
+            userId,
             status,
             from,
             to,
@@ -218,6 +221,10 @@ class ReservationsRepositoryKnex {
 
             if (buildingId !== undefined) {
                 query.where('rm.building_id', buildingId);
+            }
+
+            if (userId !== undefined) {
+                query.where('r.user_id', userId);
             }
 
             if (status !== undefined) {
@@ -265,14 +272,13 @@ class ReservationsRepositoryKnex {
             .limit(limit)
             .offset((page - 1) * limit);
 
-        // Wyświetlamy zapytania SQL i przekazywane do nich parametry.
+        // Wyświetlamy zapytania SQL i przekazywane parametry.
         console.log('\n--- SQL: COUNT ---');
         console.log(countQuery.toSQL());
 
         console.log('\n--- SQL: DATA ---');
         console.log(dataQuery.toSQL());
 
-        // Wykonujemy oba zapytania.
         const [countResult, rows] = await Promise.all([
             countQuery,
             dataQuery
@@ -290,7 +296,6 @@ class ReservationsRepositoryKnex {
             }
         };
     }
-
 
     async createWithRoomLock(reservationData) {
         try {
@@ -361,7 +366,6 @@ class ReservationsRepositoryKnex {
             throw error;
         }
     }
-
 }
 
 module.exports = new ReservationsRepositoryKnex();

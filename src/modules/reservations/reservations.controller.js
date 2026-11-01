@@ -8,7 +8,8 @@ class ReservationsController {
   getReservations = async (req, res, next) => {
     try {
       const result = await this.reservationsService.getAllReservations(
-        req.validated.query
+        req.validated.query,
+        req.user
       );
 
       res.status(200).json({
@@ -25,7 +26,7 @@ class ReservationsController {
     try {
       const id = req.validated.params.id;
       const reservation =
-        await this.reservationsService.getReservationById(id);
+        await this.reservationsService.getReservationById(id, req.user);
 
       res.status(200).json({
         ...toReservationResponse(reservation),
@@ -51,12 +52,21 @@ class ReservationsController {
     }
   };
 
-  cancelReservation = async (req, res) => {
+  cancelReservation = async (req, res, next) => {
+  try {
     const reservationId = req.validated.params.id;
-    const updatedReservation = await this.reservationsService.cancelReservation(reservationId);
+
+    const updatedReservation =
+      await this.reservationsService.cancelReservation(
+        reservationId,
+        req.user
+      );
 
     res.status(200).json(toReservationResponse(updatedReservation));
-  };
+  } catch (error) {
+    next(error);
+  }
+};
 }
 
 module.exports = ReservationsController;

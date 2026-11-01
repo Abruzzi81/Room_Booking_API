@@ -1,124 +1,154 @@
-@baseUrl = http://localhost:3000
 
-@userToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiVVNFUiIsImlhdCI6MTc5MzQ3MzEyOCwiZXhwIjoxNzkzNDc0MDI4LCJzdWIiOiIxNiJ9._K_y3go2vmHKn0yzBZGQSh6n7CRozqDnPJ2btrAZrIk
-@adminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiQURNSU4iLCJpYXQiOjE3OTM0NzMxMTAsImV4cCI6MTc5MzQ3NDAxMCwic3ViIjoiMTQifQ.fTcnCkgUIbMp87YDUUE4etaUsC0o5M1d3p8vpjf7xYI
+@baseUrl = http://localhost:3000/api
 
-@reservationId = 21
-@otherReservationId = 23
+@userToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiVVNFUiIsImlhdCI6MTc5MzU2MTQwMSwiZXhwIjoxNzkzNTYyMzAxLCJzdWIiOiIyMCJ9.VXQY2n2rtAvBKGjpJQL5LhM8srxo57Z5ALFIN3Bsiao
+@otherUserToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiVVNFUiIsImlhdCI6MTc5MzU2MTM4NywiZXhwIjoxNzkzNTYyMjg3LCJzdWIiOiIxOSJ9.82qrA665GRySEA3R8ZhTyay3QO4NQksiubeHM59ZU_w
+@adminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiQURNSU4iLCJpYXQiOjE3OTM1NjEzNjgsImV4cCI6MTc5MzU2MjI2OCwic3ViIjoiMTQifQ.PHgvkknhQSIlxiryd5MUOO386qrTSGZqgennsKC7SZ0
 
+@ownReservationId = 11
+@otherReservationId = 19
+@buildingId = 1
+@roomId = 1
 
-### T01 - GET buildings bez tokenu
-GET {{baseUrl}}/api/buildings
+### T01 - Brak tokenu: GET reservations (401)
+GET {{baseUrl}}/reservations
 
-### T02 - GET rooms bez tokenu
-GET {{baseUrl}}/api/rooms
-
-### T03 - GET auth/me jako USER
-GET {{baseUrl}}/api/auth/me
+### T02 - USER: lista własnych rezerwacji (200)
+GET {{baseUrl}}/reservations
 Authorization: Bearer {{userToken}}
 
-### T04 - GET auth/me jako ADMIN
-GET {{baseUrl}}/api/auth/me
+### T03 - ADMIN: lista wszystkich rezerwacji (200)
+GET {{baseUrl}}/reservations
 Authorization: Bearer {{adminToken}}
 
-
-
-### T05 - GET buildings jako USER
-GET {{baseUrl}}/api/buildings
+### T04 - USER: próba filtrowania po userId (403)
+GET {{baseUrl}}/reservations?userId=2
 Authorization: Bearer {{userToken}}
 
-### T06 - GET buildings jako ADMIN
-GET {{baseUrl}}/api/buildings
+### T05 - ADMIN: filtrowanie po userId (200)
+GET {{baseUrl}}/reservations?userId=2
 Authorization: Bearer {{adminToken}}
 
-### T07 - POST buildings jako USER
-POST {{baseUrl}}/api/buildings
+### T06 - USER: pobranie własnej rezerwacji (200)
+GET {{baseUrl}}/reservations/{{ownReservationId}}
+Authorization: Bearer {{userToken}}
+
+### T07 - USER: pobranie cudzej rezerwacji (404)
+GET {{baseUrl}}/reservations/{{otherReservationId}}
+Authorization: Bearer {{userToken}}
+
+### T08 - ADMIN: pobranie cudzej rezerwacji (200)
+GET {{baseUrl}}/reservations/{{otherReservationId}}
+Authorization: Bearer {{adminToken}}
+
+### T09 - USER: anulowanie własnej rezerwacji (200)
+PATCH {{baseUrl}}/reservations/{{ownReservationId}}/cancel
+Authorization: Bearer {{userToken}}
+
+### T10 - USER: anulowanie cudzej rezerwacji (404)
+PATCH {{baseUrl}}/reservations/{{otherReservationId}}/cancel
+Authorization: Bearer {{userToken}}
+
+### T11 - ADMIN: pobranie budynków (200)
+GET {{baseUrl}}/buildings
+Authorization: Bearer {{adminToken}}
+
+### T12 - USER: pobranie budynków (200)
+GET {{baseUrl}}/buildings
+Authorization: Bearer {{userToken}}
+
+### T13 - USER: utworzenie budynku (403)
+POST {{baseUrl}}/buildings
 Authorization: Bearer {{userToken}}
 Content-Type: application/json
 
 {
-  "name": "Budynek testowy USER"
+  "name": "Test building",
+  "address": "Test address"
 }
 
-### T08 - POST buildings jako ADMIN
-POST {{baseUrl}}/api/buildings
-Authorization: Bearer {{adminToken}}
+### T14 - USER: aktualizacja budynku (403)
+PATCH {{baseUrl}}/buildings/{{buildingId}}
+Authorization: Bearer {{userToken}}
 Content-Type: application/json
 
 {
-  "name": "Budynek testowy ADMIN"
+  "name": "Test building updated"
 }
 
-
-
-### T09 - GET rooms jako USER
-GET {{baseUrl}}/api/rooms
+### T15 - USER: usunięcie budynku (403)
+DELETE {{baseUrl}}/buildings/{{buildingId}}
 Authorization: Bearer {{userToken}}
 
-### T10 - GET rooms jako ADMIN
-GET {{baseUrl}}/api/rooms
+### T16 - ADMIN: pobranie sal (200)
+GET {{baseUrl}}/rooms
 Authorization: Bearer {{adminToken}}
 
-### T11 - POST rooms jako USER
-POST {{baseUrl}}/api/rooms
+### T17 - USER: pobranie sal (200)
+GET {{baseUrl}}/rooms
+Authorization: Bearer {{userToken}}
+
+### T18 - USER: utworzenie sali (403)
+POST {{baseUrl}}/rooms
 Authorization: Bearer {{userToken}}
 Content-Type: application/json
 
 {
+  "name": "Test room",
   "buildingId": 1,
-  "name": "Sala testowa USER",
   "capacity": 10
 }
 
-### T12 - POST rooms jako ADMIN
-POST {{baseUrl}}/api/rooms
+### T19 - USER: aktualizacja sali (403)
+PATCH {{baseUrl}}/rooms/{{roomId}}
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "name": "Test room updated"
+}
+
+### T20 - USER: usunięcie sali (403)
+DELETE {{baseUrl}}/rooms/{{roomId}}
+Authorization: Bearer {{userToken}}
+
+
+### T21 – ADMIN: utworzenie budynku (201)
+POST {{baseUrl}}/buildings
 Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 {
+  "name": "Admin test building",
+  "address": "Admin test address"
+}
+
+### T22 – ADMIN: aktualizacja budynku (200)
+PATCH {{baseUrl}}/buildings/{{buildingId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "Admin updated building"
+}
+
+### T23 – ADMIN: utworzenie sali (201)
+POST {{baseUrl}}/rooms
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "Admin test room",
   "buildingId": 1,
-  "name": "Sala testowa ADMIN",
   "capacity": 10
 }
 
 
-
-### T13 - GET reservations jako USER
-GET {{baseUrl}}/api/reservations
-Authorization: Bearer {{userToken}}
-
-### T14 - GET reservations jako ADMIN
-GET {{baseUrl}}/api/reservations
+### T24 – ADMIN: aktualizacja sali (200)
+PATCH {{baseUrl}}/rooms/{{roomId}}
 Authorization: Bearer {{adminToken}}
+Content-Type: application/json
 
-### T15 - USER próbuje filtrować po userId
-GET {{baseUrl}}/api/reservations?userId=2
-Authorization: Bearer {{userToken}}
-
-### T16 - ADMIN filtruje po userId
-GET {{baseUrl}}/api/reservations?userId=2
-Authorization: Bearer {{adminToken}}
-
-### T17 - USER pobiera własną rezerwację
-GET {{baseUrl}}/api/reservations/{{reservationId}}
-Authorization: Bearer {{userToken}}
-
-### T18 - USER próbuje pobrać cudzą rezerwację
-GET {{baseUrl}}/api/reservations/{{otherReservationId}}
-Authorization: Bearer {{userToken}}
-
-### T19 - ADMIN pobiera cudzą rezerwację
-GET {{baseUrl}}/api/reservations/{{otherReservationId}}
-Authorization: Bearer {{adminToken}}
-
-### T20 - USER anuluje własną rezerwację
-PATCH {{baseUrl}}/api/reservations/{{reservationId}}/cancel
-Authorization: Bearer {{userToken}}
-
-### T21 - USER próbuje anulować cudzą rezerwację
-PATCH {{baseUrl}}/api/reservations/{{otherReservationId}}/cancel
-Authorization: Bearer {{userToken}}
-
-### T22 - ADMIN anuluje cudzą rezerwację
-PATCH {{baseUrl}}/api/reservations/{{otherReservationId}}/cancel
-Authorization: Bearer {{adminToken}}
+{
+  "name": "Admin updated room"
+}

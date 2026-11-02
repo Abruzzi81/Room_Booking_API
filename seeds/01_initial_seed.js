@@ -1,4 +1,5 @@
 const bcrypt = require('bcryptjs');
+const config = require('../src/config');
 
 exports.seed = async function (knex) {
   // Czyszczenie tabel
@@ -29,10 +30,16 @@ exports.seed = async function (knex) {
     return user;
   }
 
+  if (!config.ADMIN_PASSWORD) {
+    throw new Error('Brak ADMIN_PASSWORD w pliku .env');
+  }
+
+  const password = config.ADMIN_PASSWORD;
+
   const admin = await getOrCreateUser(
     'admin@example.com',
     'ADMIN',
-    process.env.ADMIN_PASSWORD || 'Admin123456!'
+    password
   );
 
   const user1 = await getOrCreateUser(

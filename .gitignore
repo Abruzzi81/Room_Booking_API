@@ -3,6 +3,8 @@ node_modules/
 
 # Pliki środowiskowe i wrażliwe dane
 .env
+.env.*
+!.env.example
 
 # Logi npm / yarn / pnpm
 npm-debug.log*
@@ -28,3 +30,4 @@ build/
 *.njsproj
 *.sln
 *.swp
+coverage/

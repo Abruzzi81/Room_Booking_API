@@ -1,4 +1,5 @@
-require('dotenv').config();
+
+const config = require('./src/config');
 
 /**
  * @type { Object.<string, import("knex").Knex.Config> }
@@ -6,18 +7,34 @@ require('dotenv').config();
 module.exports = {
   development: {
     client: 'pg',
-    connection: {
-      host: '127.0.0.1',
-      port: 5433,
-      user: 'postgres',
-      password: 'haslo123',
-      database: 'room_db'
-    },
+    connection: config.DATABASE_URL,
     migrations: {
-      directory: './migrations'
+      directory: './migrations',
     },
     seeds: {
-      directory: './seeds'
-    }
-  }
+      directory: './seeds',
+    },
+  },
+
+  test: {
+    client: 'pg',
+    connection: config.DATABASE_URL,
+    migrations: {
+      directory: './migrations',
+    },
+    seeds: {
+      directory: './seeds',
+    },
+  },
+
+  production: {
+    client: 'pg',
+    connection: config.DATABASE_URL,
+    migrations: {
+      directory: './migrations',
+    },
+    seeds: {
+      directory: './seeds',
+    },
+  },
 };

@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const config = require('../../config');
 
 const { registerSchema, loginSchema } = require('./auth.schema');
 const usersRepository = require('./users.repository.knex');
@@ -76,8 +77,8 @@ async function login(data) {
     );
   }
 
-  const secret = process.env.JWT_SECRET;
-  const expiresIn = process.env.JWT_EXPIRES_IN || '15m';
+  const secret = config.JWT_SECRET;
+  const expiresIn = config.JWT_EXPIRES_IN;
 
   if (!secret) {
     throw new Error('Brak konfiguracji JWT_SECRET');

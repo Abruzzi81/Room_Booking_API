@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const config = require('../config');
 
 function authenticate(req, res, next) {
   const authHeader = req.headers.authorization;
@@ -21,8 +22,8 @@ function authenticate(req, res, next) {
   }
 
   const token = authHeader.slice(7).trim();
-  const secret = process.env.JWT_SECRET;
-
+  const secret = config.JWT_SECRET;
+  
   if (!secret) {
     return next(new Error('Brak konfiguracji JWT_SECRET'));
   }

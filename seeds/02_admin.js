@@ -1,8 +1,13 @@
 const bcrypt = require('bcryptjs');
+const config = require('../src/config');
 
 exports.seed = async function (knex) {
   const email = 'admin@example.com';
-  const password = process.env.ADMIN_PASSWORD || 'Admin123456!';
+  if (!config.ADMIN_PASSWORD) {
+    throw new Error('Brak ADMIN_PASSWORD w pliku .env');
+  }
+
+  const password = config.ADMIN_PASSWORD;
   const passwordHash = await bcrypt.hash(password, 12);
 
   await knex('users')

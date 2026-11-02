@@ -1,9 +1,6 @@
-const { createApp } = require('./app');
+const config = require('./src/config');
+const app = require('./src/app');
 
-const PORT = 3000;
-
-const app = createApp();
-
-app.listen(PORT, () => {
-  console.log(`Serwer działa na http://localhost:${PORT}`);
+app.listen(config.PORT, () => {
+  console.log(`Server running on port ${config.PORT}`);
 });

@@ -1,35 +1,33 @@
 const jwt = require('jsonwebtoken');
 const config = require('../config');
+const sendError = require('../utils/error-response');
 
 function authenticate(req, res, next) {
   const authHeader = req.headers.authorization;
 
   if (!authHeader) {
-    return res.status(401).json({
-      code: 'UNAUTHORIZED',
-      message: 'Brak tokenu',
-    });
+    return sendError(
+      res, req, 401,
+      'UNAUTHORIZED',
+      'Brak tokenu'
+    );
   }
 
   if (
     !authHeader.startsWith('Bearer ') ||
     !authHeader.slice(7).trim()
   ) {
-    return res.status(401).json({
-      code: 'UNAUTHORIZED',
-      message: 'Nieprawidłowy format nagłówka Authorization',
-    });
+    return sendError(
+      res, req, 401,
+      'UNAUTHORIZED',
+      'Nieprawidłowy format nagłówka Authorization'
+    );
   }
 
   const token = authHeader.slice(7).trim();
-  const secret = config.JWT_SECRET;
-  
-  if (!secret) {
-    return next(new Error('Brak konfiguracji JWT_SECRET'));
-  }
 
   try {
-    const payload = jwt.verify(token, secret, {
+    const payload = jwt.verify(token, config.JWT_SECRET, {
       algorithms: ['HS256'],
     });
 
@@ -38,10 +36,11 @@ function authenticate(req, res, next) {
       typeof payload.sub !== 'string' ||
       !['USER', 'ADMIN'].includes(payload.role)
     ) {
-      return res.status(401).json({
-        code: 'UNAUTHORIZED',
-        message: 'Nieprawidłowy token',
-      });
+      return sendError(
+        res, req, 401,
+        'UNAUTHORIZED',
+        'Nieprawidłowy token'
+      );
     }
 
     req.user = {
@@ -52,26 +51,29 @@ function authenticate(req, res, next) {
     return next();
   } catch (error) {
     if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({
-        code: 'TOKEN_EXPIRED',
-        message: 'Token expired',
-      });
+      return sendError(
+        res, req, 401,
+        'TOKEN_EXPIRED',
+        'Token wygasł'
+      );
     }
 
-    return res.status(401).json({
-      code: 'UNAUTHORIZED',
-      message: 'Nieprawidłowy lub zmodyfikowany token',
-    });
+    return sendError(
+      res, req, 401,
+      'UNAUTHORIZED',
+      'Nieprawidłowy lub zmodyfikowany token'
+    );
   }
 }
 
 function authorize(...roles) {
   return (req, res, next) => {
     if (!req.user || !roles.includes(req.user.role)) {
-      return res.status(403).json({
-        code: 'FORBIDDEN',
-        message: 'Brak uprawnień do wykonania tej operacji',
-      });
+      return sendError(
+        res, req, 403,
+        'FORBIDDEN',
+        'Brak uprawnień do wykonania tej operacji'
+      );
     }
 
     return next();

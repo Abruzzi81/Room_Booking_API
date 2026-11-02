@@ -1,4 +1,5 @@
 const authService = require('./auth.service');
+const sendError = require('../../utils/error-response');
 
 async function register(req, res, next) {
   try {
@@ -6,17 +7,20 @@ async function register(req, res, next) {
     return res.status(201).json(user);
   } catch (error) {
     if (error.code === 'EMAIL_TAKEN') {
-      return res.status(409).json({
-        code: 'EMAIL_TAKEN',
-        message: 'Konto z tym adresem email już istnieje',
-      });
+      return sendError(
+        res, req, 409,
+        'EMAIL_TAKEN',
+        'Konto z tym adresem email już istnieje'
+      );
     }
 
     if (error.code === 'VALIDATION_ERROR') {
-      return res.status(400).json({
-        code: error.code,
-        message: error.message,
-      });
+      return sendError(
+        res, req, 400,
+        'VALIDATION_ERROR',
+        error.message,
+        error.details || null
+      );
     }
 
     return next(error);
@@ -29,10 +33,11 @@ async function login(req, res, next) {
     return res.status(200).json(result);
   } catch (error) {
     if (error.code === 'INVALID_CREDENTIALS') {
-      return res.status(401).json({
-        code: 'INVALID_CREDENTIALS',
-        message: 'Nieprawidłowy email lub hasło',
-      });
+      return sendError(
+        res, req, 401,
+        'INVALID_CREDENTIALS',
+        'Nieprawidłowy email lub hasło'
+      );
     }
 
     return next(error);
@@ -45,10 +50,11 @@ async function me(req, res, next) {
     return res.status(200).json(user);
   } catch (error) {
     if (error.code === 'USER_NOT_FOUND') {
-      return res.status(401).json({
-        code: 'UNAUTHORIZED',
-        message: 'Użytkownik nie istnieje',
-      });
+      return sendError(
+        res, req, 401,
+        'UNAUTHORIZED',
+        'Użytkownik nie istnieje'
+      );
     }
 
     return next(error);

@@ -10,12 +10,21 @@ const buildingsRoutes = require('./modules/buildings/buildings.routes');
 const authRoutes = require('./modules/auth/auth.routes');
 const { authenticate } = require('./middleware/auth.middleware');
 
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocument = require('./docs/swagger');
+
 
 function createApp() {
   const app = express();
 
+  app.use(loggerMiddleware);
   app.use(express.json());
-  app.use(loggerMiddleware); // Logowanie i X-Request-Id
+
+  app.use(
+  '/api/docs',
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerDocument)
+);
 
   app.use((req, res, next) => {
     const publicRoutes = [
